@@ -1,80 +1,23 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Person } from './types';
-import { getPeople } from '.';
-import { Loader } from './components/Loader';
-import PeopleTable from './components/PeopleTable';
+// src/App.tsx
+import React from 'react';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { PeoplePage } from './pages/PeoplePage';
+import Navbar from './components/Navbar';
+import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
 
-const PeoplePage = () => {
-  const [people, setPeople] = useState<Person[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPeople = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await getPeople();
-
-      setPeople(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
-      setPeople([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPeople();
-  }, [fetchPeople]);
-
-  const handleRetry = useCallback(() => {
-    fetchPeople();
-  }, [fetchPeople]);
-
+export const App: React.FC = () => {
   return (
-    <div>
-      <h1 className="title">People Page</h1>
-
-      <div className="block">
-        <div className="box table-container">
-          {isLoading && <Loader />}
-
-          {!isLoading && error && (
-            <div className="notification is-danger">
-              <p data-cy="peopleLoadingError" className="has-text-danger">
-                {error}
-              </p>
-              <button
-                className="button is-small is-outlined is-danger mt-2"
-                onClick={handleRetry}
-                type="button"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-
-          {!isLoading && !error && people.length === 0 && (
-            <div className="notification is-info">
-              <p data-cy="noPeopleMessage">There are no people on the server</p>
-              <button
-                className="button is-small is-outlined is-info mt-2"
-                onClick={handleRetry}
-                type="button"
-              >
-                Refresh
-              </button>
-            </div>
-          )}
-
-          {!isLoading && !error && people.length > 0 && (
-            <PeopleTable people={people} />
-          )}
-        </div>
-      </div>
+    <div data-cy="app">
+      <HashRouter>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/people" element={<PeoplePage />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </HashRouter>
     </div>
   );
 };
-
-export default PeoplePage;

@@ -1,14 +1,10 @@
-import { Person } from './types';
+// src/index.tsx
+import ReactDOM from 'react-dom/client';
+import { App } from './App';
+import './App.scss';
 
-const PEOPLE_URL =
-  'https://mate-academy.github.io/react_people-table/api/people.json';
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement,
+);
 
-export async function getPeople(): Promise<Person[]> {
-  const response = await fetch(PEOPLE_URL);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch people: ${response.statusText}`);
-  }
-
-  return response.json();
-}
+root.render(<App />);
