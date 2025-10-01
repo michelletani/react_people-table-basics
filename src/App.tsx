@@ -1,29 +1,80 @@
-import './App.scss';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import HomePage from './pages/HomePage';
-import PeoplePage from './pages/PeoplePage';
-import NotFoundPage from './pages/NotFoundPage';
-import { HashRouter as Router } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { Person } from './types';
+import { getPeople } from '.';
+import { Loader } from './components/Loader';
+import PeopleTable from './components/PeopleTable';
 
-export const App = () => (
-  <div data-cy="app">
-    <main className="section">
-      <div className="container">
-        <Router>
-          <Navbar />
-          <Routes>
-            <Route index element={<HomePage />} />
-            <Route path={'/'} element={<HomePage />} />
-            <Route path="/home" element={<Navigate to="/" replace />} />
-            <Route path={'people'}>
-              <Route index element={<PeoplePage />} />
-              <Route path={':slug'} element={<PeoplePage />} />
-            </Route>
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
+const PeoplePage = () => {
+  const [people, setPeople] = useState<Person[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPeople = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getPeople();
+
+      setPeople(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+      setPeople([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPeople();
+  }, [fetchPeople]);
+
+  const handleRetry = useCallback(() => {
+    fetchPeople();
+  }, [fetchPeople]);
+
+  return (
+    <div>
+      <h1 className="title">People Page</h1>
+
+      <div className="block">
+        <div className="box table-container">
+          {isLoading && <Loader />}
+
+          {!isLoading && error && (
+            <div className="notification is-danger">
+              <p data-cy="peopleLoadingError" className="has-text-danger">
+                {error}
+              </p>
+              <button
+                className="button is-small is-outlined is-danger mt-2"
+                onClick={handleRetry}
+                type="button"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !error && people.length === 0 && (
+            <div className="notification is-info">
+              <p data-cy="noPeopleMessage">There are no people on the server</p>
+              <button
+                className="button is-small is-outlined is-info mt-2"
+                onClick={handleRetry}
+                type="button"
+              >
+                Refresh
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !error && people.length > 0 && (
+            <PeopleTable people={people} />
+          )}
+        </div>
       </div>
-    </main>
-  </div>
-);
+    </div>
+  );
+};
+
+export default PeoplePage;

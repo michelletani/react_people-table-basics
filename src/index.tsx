@@ -1,8 +1,14 @@
-import { createRoot } from 'react-dom/client';
+import { Person } from './types';
 
-import 'bulma/css/bulma.css';
-import '@fortawesome/fontawesome-free/css/all.css';
+const PEOPLE_URL =
+  'https://mate-academy.github.io/react_people-table/api/people.json';
 
-import { App } from './App';
+export async function getPeople(): Promise<Person[]> {
+  const response = await fetch(PEOPLE_URL);
 
-createRoot(document.getElementById('root') as HTMLDivElement).render(<App />);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch people: ${response.statusText}`);
+  }
+
+  return response.json();
+}
